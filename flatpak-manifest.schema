@@ -1,0 +1,294 @@
+{
+  "title": "Flatpak Builder Manifest",
+  "definitions": {
+    "build-options": {
+      "type": "object",
+      "properties": {
+        "cflags": {
+          "type": "string",
+          "description": "This is set in the environment variable CFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatinated with spaces inbetween."
+        },
+        "cxxflags": {
+          "type": "string",
+          "description": "This is set in the environment variable CXXFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatinated with spaces inbetween."
+        },
+        "ldflags": {
+          "type": "string",
+          "description": "This is set in the environment variable LDFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatinated with spaces inbetween."
+        },
+        "prefix": {
+          "type": "string",
+          "description": "filename\\n#text"
+        },
+        "env": {
+          "type": "object",
+          "description": "This is a dictionary defining environment variables to be set during the build."
+        },
+        "build-args": {
+          "type": "array",
+          "description": "This is an array containing extra options to pass to flatpak build."
+        },
+        "config-opts": {
+          "type": "array",
+          "description": "This is an array containing extra options to pass to configure."
+        },
+        "strip": {
+          "type": "boolean",
+          "description": "If this is true (the default is false) then all ELF files will be stripped after install."
+        },
+        "no-debuginfo": {
+          "type": "boolean",
+          "description": "By default (if strip is not true) flatpak-builder extracts all debug info in ELF files to a separate files\n                    and puts this in an extension. If you want to disable this, set no-debuginfo to true."
+        },
+        "arch": {
+          "type": "object",
+          "description": "This is a dictionary defining for each arch a separate build options object that override the main one."
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the module, used in e.g. build logs. The name is also used for constructing filenames and commandline arguments, therefore using spaces or '/' in this string is a bad idea."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "If true, skip this module"
+        },
+        "sources": {
+          "type": "array",
+          "description": "An array of objects defining sources that will be downloaded and extracted in order"
+        },
+        "config-opts": {
+          "type": "array",
+          "description": "An array of options that will be passed to configure"
+        },
+        "make-args": {
+          "type": "array",
+          "description": "An array of arguments that will be passed to make"
+        },
+        "make-install-args": {
+          "type": "array",
+          "description": "An array of arguments that will be passed to make install"
+        },
+        "rm-configure": {
+          "type": "boolean",
+          "description": "If true, remove the configure script before starting build"
+        },
+        "no-autogen": {
+          "type": "boolean",
+          "description": "Ignore the existence of an autogen script"
+        },
+        "no-parallel-make": {
+          "type": "boolean",
+          "description": "Don't call make with arguments to build in parallel"
+        },
+        "no-make-install": {
+          "type": "boolean",
+          "description": "Don't run the make install (or equivalent) stage"
+        },
+        "no-python-timestamp-fix": {
+          "type": "boolean",
+          "description": "Don't fix up the *.py[oc] header timestamps for ostree use."
+        },
+        "cmake": {
+          "type": "boolean",
+          "description": "Use cmake instead of configure (deprecated: use buildsystem instead)"
+        },
+        "buildsystem": {
+          "type": "string",
+          "description": "Build system to use: autotools, cmake, cmake-ninja, meson, simple"
+        },
+        "builddir": {
+          "type": "boolean",
+          "description": "Use a build directory that is separate from the source directory"
+        },
+        "subdir": {
+          "type": "string",
+          "description": "Build inside this subdirectory of the extracted sources"
+        },
+        "build-options": {
+          "description": "A build options object that can override global options",
+          "$ref": "#/definitions/build-options"
+        },
+        "build-commands": {
+          "type": "array",
+          "description": "An array of commands to run during build (between make and make install if those are used).\n                    This is primarily useful when using the \"simple\" buildsystem."
+        },
+        "post-install": {
+          "type": "array",
+          "description": "An array of shell commands that are run after the install phase. Can for example\n                    clean up the install dir, or install extra files."
+        },
+        "cleanup": {
+          "type": "array",
+          "description": "An array of file patterns that should be removed at the end.\n                    Patterns starting with / are taken to be full pathnames (without the /app prefix), otherwise they just match\n                    the basename. Note that any patterns will only match files installed by this module."
+        },
+        "ensure-writable": {
+          "type": "array",
+          "description": "The way the builder works is that files in the install directory\n                    are hard-links to the cached files, so you're not allowed to modify them in-place.\n                    If you list a file in this then the hardlink will be broken and you can modify it.\n                    This is a workaround, ideally installing files should replace files, not modify\n                    existing ones."
+        },
+        "only-arches": {
+          "type": "array",
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "description": "Don't build on any of the arches listed."
+        },
+        "cleanup-platform": {
+          "type": "array",
+          "description": "Extra files to clean up in the platform."
+        },
+        "modules": {
+          "type": "array",
+          "description": "An array of objects specifying nested modules to be built before this one.\n                    String members in the array are interpreted as names of a separate json file that contains a module."
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "A string defining the application id."
+    },
+    "branch": {
+      "type": "string",
+      "description": "The branch of the application, defaults to master."
+    },
+    "runtime": {
+      "type": "string",
+      "description": "The name of the runtime that the application uses."
+    },
+    "runtime-version": {
+      "type": "string",
+      "description": "The version of the runtime that the application uses, defaults to master."
+    },
+    "sdk": {
+      "type": "string",
+      "description": "The name of the development runtime that the application builds with."
+    },
+    "var": {
+      "type": "string",
+      "description": "Initialize the (otherwise empty) writable /var in the build with a copy of this runtime."
+    },
+    "metadata": {
+      "type": "string",
+      "description": "Use this file as the base metadata file when finishing."
+    },
+    "command": {
+      "type": "string",
+      "description": "The filename or path to the main binary of the application. Note that this is really just a single file, not a commandline. If you want to pass arguments, install a shell script wrapper and use that as the command."
+    },
+    "build-runtime": {
+      "type": "boolean",
+      "description": "Build a new runtime instead of an application."
+    },
+    "build-extension": {
+      "type": "boolean",
+      "description": "Build an extension."
+    },
+    "separate-locales": {
+      "type": "boolean",
+      "description": "Separate out locale files and translations to an extension runtime. Defaults to true."
+    },
+    "id-platform": {
+      "type": "string",
+      "description": "When building a runtime sdk, also create a platform based on it with this id."
+    },
+    "metadata-platform": {
+      "type": "string",
+      "description": "The metadata file to use for the platform we create."
+    },
+    "writable-sdk": {
+      "type": "boolean",
+      "description": "If true, use a writable copy of the sdk for /usr.\n                    Defaults to true if build-runtime is specified."
+    },
+    "appstream-compose": {
+      "type": "boolean",
+      "description": "Run appstream-compose during cleanup phase. Defaults to true."
+    },
+    "sdk-extensions": {
+      "type": "array",
+      "description": "Install these extra sdk extensions in /usr."
+    },
+    "platform-extensions": {
+      "type": "array",
+      "description": "Install these extra sdk extensions when creating the platform."
+    },
+    "base": {
+      "type": "string",
+      "description": "Start with the files from the specified application. This can be\n                    used to create applications that extend another application."
+    },
+    "base-version": {
+      "type": "string",
+      "description": "Use this specific version of the application specified in base.\n                    If unspecified, this uses the value specified in branch"
+    },
+    "base-extensions": {
+      "type": "array",
+      "description": "Install these extra extensions from the base application when initializing\n                    the application directory."
+    },
+    "tags": {
+      "type": "array",
+      "description": "Add these tags to the metadata file."
+    },
+    "build-options": {
+      "description": "Object specifying the build environment. See below for details.",
+      "$ref": "#/definitions/build-options"
+    },
+    "modules": {
+      "type": "array",
+      "description": "An array of objects specifying the modules to be built in order.\n                    String members in the array are interpreted as the name of a separate json file that contains a module.\n                    See below for details."
+    },
+    "cleanup": {
+      "type": "array",
+      "description": "An array of file patterns that should be removed at the end.\n                    Patterns starting with / are taken to be full pathnames (without the /app prefix), otherwise they just match\n                    the basename."
+    },
+    "cleanup-commands": {
+      "type": "array",
+      "description": "An array of commandlines that are run during the cleanup phase."
+    },
+    "cleanup-platform": {
+      "type": "array",
+      "description": "Extra files to clean up in the platform."
+    },
+    "cleanup-platform-commands": {
+      "type": "array",
+      "description": "An array of commandlines that are run during the cleanup phase of the platform."
+    },
+    "finish-args": {
+      "type": "array",
+      "description": "command\\n#text"
+    },
+    "rename-desktop-file": {
+      "type": "string",
+      "description": "Any desktop file with this name will be renamed to a name based on id during the cleanup phase."
+    },
+    "rename-appdata-file": {
+      "type": "string",
+      "description": "Any appdata file with this name will be renamed to a name based on id during the cleanup phase."
+    },
+    "rename-icon": {
+      "type": "string",
+      "description": "Any icon with this name will be renamed to a name based on id during the cleanup phase. Note that this is the icon name, not the full filenames, so it should not include a filename extension."
+    },
+    "copy-icon": {
+      "type": "boolean",
+      "description": "If rename-icon is set, keep a copy of the old icon file."
+    },
+    "desktop-file-name-prefix": {
+      "type": "string",
+      "description": "This string will be prefixed to the Name key in the main application desktop file."
+    },
+    "desktop-file-name-suffix": {
+      "type": "string",
+      "description": "This string will be suffixed to the Name key in the main application desktop file."
+    }
+  }
+}
