@@ -18,7 +18,7 @@
         },
         "prefix": {
           "type": "string",
-          "description": "filename\\n#text"
+          "description": "filename"
         },
         "env": {
           "type": "object",
@@ -26,10 +26,16 @@
         },
         "build-args": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "This is an array containing extra options to pass to flatpak build."
         },
         "config-opts": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "This is an array containing extra options to pass to configure."
         },
         "strip": {
@@ -38,7 +44,7 @@
         },
         "no-debuginfo": {
           "type": "boolean",
-          "description": "By default (if strip is not true) flatpak-builder extracts all debug info in ELF files to a separate files\n                    and puts this in an extension. If you want to disable this, set no-debuginfo to true."
+          "description": "By default (if strip is not true) flatpak-builder extracts all debug info in ELF files to a separate files and puts this in an extension. If you want to disable this, set no-debuginfo to true."
         },
         "arch": {
           "type": "object",
@@ -59,18 +65,52 @@
         },
         "sources": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/archive-source"
+              },
+              {
+                "$ref": "#/definitions/git-source"
+              },
+              {
+                "$ref": "#/definitions/bzr-source"
+              },
+              {
+                "$ref": "#/definitions/file-source"
+              },
+              {
+                "$ref": "#/definitions/script-source"
+              },
+              {
+                "$ref": "#/definitions/shell-source"
+              },
+              {
+                "$ref": "#/definitions/patch-source"
+              }
+            ]
+          },
           "description": "An array of objects defining sources that will be downloaded and extracted in order"
         },
         "config-opts": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "An array of options that will be passed to configure"
         },
         "make-args": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "An array of arguments that will be passed to make"
         },
         "make-install-args": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "An array of arguments that will be passed to make install"
         },
         "rm-configure": {
@@ -99,6 +139,14 @@
         },
         "buildsystem": {
           "type": "string",
+          "enum": [
+            "autotools",
+            "cmake",
+            "cmake-ninja",
+            "meson",
+            "simple"
+          ],
+          "default": "autotools",
           "description": "Build system to use: autotools, cmake, cmake-ninja, meson, simple"
         },
         "builddir": {
@@ -110,51 +158,745 @@
           "description": "Build inside this subdirectory of the extracted sources"
         },
         "build-options": {
-          "description": "A build options object that can override global options",
-          "$ref": "#/definitions/build-options"
+          "$ref": "#/definitions/build-options",
+          "description": "A build options object that can override global options"
         },
         "build-commands": {
           "type": "array",
-          "description": "An array of commands to run during build (between make and make install if those are used).\n                    This is primarily useful when using the \"simple\" buildsystem."
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of commands to run during build (between make and make install if those are used). This is primarily useful when using the \"simple\" buildsystem."
         },
         "post-install": {
           "type": "array",
-          "description": "An array of shell commands that are run after the install phase. Can for example\n                    clean up the install dir, or install extra files."
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that are run after the install phase. Can for example clean up the install dir, or install extra files."
         },
         "cleanup": {
           "type": "array",
-          "description": "An array of file patterns that should be removed at the end.\n                    Patterns starting with / are taken to be full pathnames (without the /app prefix), otherwise they just match\n                    the basename. Note that any patterns will only match files installed by this module."
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of file patterns that should be removed at the end. Patterns starting with / are taken to be full pathnames (without the /app prefix), otherwise they just match the basename. Note that any patterns will only match files installed by this module."
         },
         "ensure-writable": {
           "type": "array",
-          "description": "The way the builder works is that files in the install directory\n                    are hard-links to the cached files, so you're not allowed to modify them in-place.\n                    If you list a file in this then the hardlink will be broken and you can modify it.\n                    This is a workaround, ideally installing files should replace files, not modify\n                    existing ones."
+          "items": {
+            "type": "string"
+          },
+          "description": "The way the builder works is that files in the install directory are hard-links to the cached files, so you're not allowed to modify them in-place. If you list a file in this then the hardlink will be broken and you can modify it. This is a workaround, ideally installing files should replace files, not modify existing ones."
         },
         "only-arches": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "If non-empty, only build the module on the arches listed."
         },
         "skip-arches": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "Don't build on any of the arches listed."
         },
         "cleanup-platform": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "Extra files to clean up in the platform."
         },
         "modules": {
           "type": "array",
-          "description": "An array of objects specifying nested modules to be built before this one.\n                    String members in the array are interpreted as names of a separate json file that contains a module."
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/module"
+              }
+            ]
+          },
+          "description": "An array of objects specifying nested modules to be built before this one. String members in the array are interpreted as names of a separate json file that contains a module."
         }
       }
     },
-    "sources": {
+    "archive-source": {
       "type": "object",
-      "properties": {}
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
+    },
+    "git-source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
+    },
+    "bzr-source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
+    },
+    "file-source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
+    },
+    "script-source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
+    },
+    "shell-source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
+    },
+    "patch-source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "only-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "If non-empty, only build the module on the arches listed."
+        },
+        "skip-arches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Don't build on any of the arches listed."
+        },
+        "dest": {
+          "type": "string",
+          "description": "Directory inside the source dir where this source will be extracted."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "git",
+            "bzr",
+            "file",
+            "script",
+            "shell",
+            "patch"
+          ],
+          "description": "\"patch\""
+        },
+        "path": {
+          "type": "string",
+          "description": "The path of a patch file that will be applied in the source dir"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "The sha256 checksum of the file, verified after download. This is optional for local files."
+        },
+        "strip-components": {
+          "type": "integer",
+          "description": "The value of the -p argument to patch, defaults to 1."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch/tag to use from the git repository"
+        },
+        "commit": {
+          "type": "string",
+          "description": "The commit to use from the git repository. If branch is also specified, then it is verified that the branch/tag is at this specific commit. This is a readable way to document that you're using a particular tag, but verify that it does not change."
+        },
+        "disable-fsckobjects": {
+          "type": "boolean",
+          "description": "Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories."
+        },
+        "revision": {
+          "type": "string",
+          "description": "A specific revision to use in the branch"
+        },
+        "dest-filename": {
+          "type": "string",
+          "description": "Filename to use inside the source dir, default to the basename of path."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of shell commands that will be run during source extraction"
+        },
+        "use-git": {
+          "type": "boolean",
+          "description": "Whether to use \"git apply\" rather than \"patch\" to apply the patch, required when the patch file contains binary diffs."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra options to pass to the patch command."
+        }
+      }
     }
   },
   "type": "object",
+  "oneOf": [
+    {
+      "required": [
+        "app-id"
+      ]
+    },
+    {
+      "required": [
+        "id"
+      ]
+    }
+  ],
   "properties": {
     "id": {
+      "type": "string",
+      "description": "A string defining the application id."
+    },
+    "app-id": {
       "type": "string",
       "description": "A string defining the application id."
     },
@@ -208,7 +950,7 @@
     },
     "writable-sdk": {
       "type": "boolean",
-      "description": "If true, use a writable copy of the sdk for /usr.\n                    Defaults to true if build-runtime is specified."
+      "description": "If true, use a writable copy of the sdk for /usr. Defaults to true if build-runtime is specified."
     },
     "appstream-compose": {
       "type": "boolean",
@@ -216,55 +958,92 @@
     },
     "sdk-extensions": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "Install these extra sdk extensions in /usr."
     },
     "platform-extensions": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "Install these extra sdk extensions when creating the platform."
     },
     "base": {
       "type": "string",
-      "description": "Start with the files from the specified application. This can be\n                    used to create applications that extend another application."
+      "description": "Start with the files from the specified application. This can be used to create applications that extend another application."
     },
     "base-version": {
       "type": "string",
-      "description": "Use this specific version of the application specified in base.\n                    If unspecified, this uses the value specified in branch"
+      "description": "Use this specific version of the application specified in base. If unspecified, this uses the value specified in branch"
     },
     "base-extensions": {
       "type": "array",
-      "description": "Install these extra extensions from the base application when initializing\n                    the application directory."
+      "items": {
+        "type": "string"
+      },
+      "description": "Install these extra extensions from the base application when initializing the application directory."
     },
     "tags": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "Add these tags to the metadata file."
     },
     "build-options": {
-      "description": "Object specifying the build environment. See below for details.",
-      "$ref": "#/definitions/build-options"
+      "$ref": "#/definitions/build-options",
+      "description": "Object specifying the build environment. See below for details."
     },
     "modules": {
       "type": "array",
-      "description": "An array of objects specifying the modules to be built in order.\n                    String members in the array are interpreted as the name of a separate json file that contains a module.\n                    See below for details."
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/definitions/module"
+          }
+        ]
+      },
+      "description": "An array of objects specifying the modules to be built in order. String members in the array are interpreted as the name of a separate json file that contains a module. See below for details."
     },
     "cleanup": {
       "type": "array",
-      "description": "An array of file patterns that should be removed at the end.\n                    Patterns starting with / are taken to be full pathnames (without the /app prefix), otherwise they just match\n                    the basename."
+      "items": {
+        "type": "string"
+      },
+      "description": "An array of file patterns that should be removed at the end. Patterns starting with / are taken to be full pathnames (without the /app prefix), otherwise they just match the basename."
     },
     "cleanup-commands": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "An array of commandlines that are run during the cleanup phase."
     },
     "cleanup-platform": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "Extra files to clean up in the platform."
     },
     "cleanup-platform-commands": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "An array of commandlines that are run during the cleanup phase of the platform."
     },
     "finish-args": {
       "type": "array",
-      "description": "command\\n#text"
+      "items": {
+        "type": "string"
+      },
+      "description": "command"
     },
     "rename-desktop-file": {
       "type": "string",
