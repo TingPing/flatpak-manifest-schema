@@ -892,7 +892,7 @@
     }
   ],
   "properties": {
-    "id": {
+    "app-id": {
       "type": "string",
       "description": "A string defining the application id."
     },
