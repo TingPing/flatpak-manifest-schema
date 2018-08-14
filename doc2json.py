@@ -50,10 +50,13 @@ def handle_property(name: str, variable_info: dict, entry_dict: dict):
                 {'$ref': '#/definitions/archive-source'},
                 {'$ref': '#/definitions/git-source'},
                 {'$ref': '#/definitions/bzr-source'},
+                {'$ref': '#/definitions/svn-source'},
                 {'$ref': '#/definitions/file-source'},
+                {'$ref': '#/definitions/directory-source'},
                 {'$ref': '#/definitions/script-source'},
                 {'$ref': '#/definitions/shell-source'},
                 {'$ref': '#/definitions/patch-source'},
+                {'$ref': '#/definitions/extra-data-source'},
             ]
         }
     elif name == 'modules':  # Module/toplevel property
@@ -67,12 +70,12 @@ def handle_property(name: str, variable_info: dict, entry_dict: dict):
     elif name == 'type':  # Sources property
         variable_info['type'] = 'string'
         variable_info['enum'] = [
-            'archive', 'git', 'bzr', 'file', 'script', 'shell', 'patch',
+            'archive', 'git', 'bzr', 'svn', 'dir', 'file', 'script', 'shell', 'patch', 'extra-data'
         ]
     elif name == 'buildsystem':  # Sources property
         variable_info['type'] = 'string'
         variable_info['enum'] = [
-            'autotools', 'cmake', 'cmake-ninja', 'meson', 'simple'
+            'autotools', 'cmake', 'cmake-ninja', 'meson', 'simple', 'qmake'
         ]
         variable_info['default'] = 'autotools'
     elif type_text.startswith('(array'):

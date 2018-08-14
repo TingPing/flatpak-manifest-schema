@@ -32,7 +32,7 @@
         <title>Description</title>
 
         <para>
-          Flatpak uses manifest, or recipe, files in a json format to describe how an
+          Flatpak uses manifest, or recipe, files in a json or yaml format to describe how an
           application and its bundled dependencies can be built from sources. The manifest
           gets used by flatpak-builder.
        </para>
@@ -42,7 +42,7 @@
         <title>File format</title>
 
         <para>
-          The top level of the json file describes global attributes of the application, how
+          The top level of the manifest file describes global attributes of the application, how
           it can be built, and the list of modules that need to be built.
         </para>
 
@@ -59,6 +59,30 @@
                 <varlistentry>
                     <term><option>branch</option> (string)</term>
                     <listitem><para>The branch of the application, defaults to master.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>collection-id</option> (string)</term>
+                    <listitem><para>The collection ID of the repository,
+                    defaults to being unset. Setting a globally
+                    unique collection ID allows the apps in the repository to be shared over
+                    peer to peer systems without needing further configuration.
+                    If building in an existing repository, the collection ID
+                    must match the existing configured collection ID for that
+                    repository.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>extension-tag</option> (string)</term>
+                    <listitem><para>If building an extension, the tag for the extension
+                    point to use. Since flatpak 0.11.4 a runtime may define multiple
+                    locations for the same extension point with the intention that
+                    different branches for the extension are mounted at each location. When
+                    building an extension it is necessary to know what extension point to
+                    install the extension to. This option resolves any ambiguity
+                    in which extension point to choose. If not specified, the default choice
+                    is to install into either the only location for the extension point or
+                    into the location for the untagged extension point. If there are multiple
+                    locations for the same extension point defined with different tags
+                    then an error will occur.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>runtime</option> (string)</term>
@@ -137,6 +161,16 @@
                     <listitem><para>Install these extra extensions from the base application when initializing
                     the application directory.</para></listitem>
                 </varlistentry>
+                <varlistentry>
+                    <term><option>inherit-extensions</option> (array of strings)</term>
+                    <listitem><para>Inherit these extra extensions points from the base application or sdk when
+                    finishing the build.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>inherit-sdk-extensions</option> (array of strings)</term>
+                    <listitem><para>Inherit these extra extensions points from the base application or sdk when
+                    finishing the build, but do not inherit them into the platform.</para></listitem>
+                </varlistentry>
 
                 <varlistentry>
                     <term><option>tags</option> (array of strings)</term>
@@ -147,10 +181,18 @@
                     <listitem><para>Object specifying the build environment. See below for details.</para></listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term><option>modules</option> (array of objects or string)</term>
+                    <term><option>modules</option> (array of objects or strings)</term>
                     <listitem><para>An array of objects specifying the modules to be built in order.
-                    String members in the array are interpreted as the name of a separate json file that contains a module.
+                    String members in the array are interpreted as the name of a separate json or yaml file that contains a module.
                     See below for details.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>add-extensions</option> (objects)</term>
+                    <listitem><para>This is a dictionary of extension objects. The key is the name of the extension. See below for details.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>add-build-extensions</option> (objects)</term>
+                    <listitem><para>This is a dictionary of extension objects similar to add-extensions. The main difference is that the extensions are added early and are available for use during the build.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>cleanup</option> (array of strings)</term>
@@ -170,6 +212,10 @@
                     <term><option>cleanup-platform-commands</option> (array of strings)</term>
                     <listitem><para>An array of commandlines that are run during the cleanup phase of the platform.</para></listitem>
                 </varlistentry>
+                <varlistentry>
+                    <term><option>prepare-platform-commands</option> (array of strings)</term>
+                    <listitem><para>An array of commandlines that are run after importing the base platform, but before applying the new files from the sdk. This is a good place to e.g. delete things from the base that may conflict with the files added in the sdk. </para></listitem>
+                </varlistentry>
                <varlistentry>
                     <term><option>finish-args</option> (array of strings)</term>
                     <listitem><para>An array of arguments passed to the <command>flatpak build-finish</command> command.</para></listitem>
@@ -185,6 +231,15 @@
                 <varlistentry>
                     <term><option>rename-icon</option> (string)</term>
                     <listitem><para>Any icon with this name will be renamed to a name based on id during the cleanup phase. Note that this is the icon name, not the full filenames, so it should not include a filename extension. </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>appdata-license</option> (string)</term>
+                    <listitem><para>Replace the appdata
+                    project_license field with this string. This is
+                    useful as the upstream license is typically only
+                    about the application itself, whereas the bundled
+                    app can contain other licenses
+                    too. </para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>copy-icon</option> (boolean)</term>
@@ -213,15 +268,35 @@
             <variablelist>
                 <varlistentry>
                     <term><option>cflags</option> (string)</term>
-                    <listitem><para>This is set in the environment variable CFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatinated with spaces inbetween.</para></listitem>
+                    <listitem><para>This is set in the environment variable CFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatenated, separated by spaces.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>cflags-override</option> (boolean)</term>
+                    <listitem><para>If this is true, clear cflags from previous build options before adding it from these options.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>cppflags</option> (string)</term>
+                    <listitem><para>This is set in the environment variable CPPFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatenated, separated by spaces.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>cppflags-override</option> (boolean)</term>
+                    <listitem><para>If this is true, clear cppflags from previous build options before adding it from these options.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>cxxflags</option> (string)</term>
-                    <listitem><para>This is set in the environment variable CXXFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatinated with spaces inbetween.</para></listitem>
+                    <listitem><para>This is set in the environment variable CXXFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatenated, separated by spaces.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>cxxflags-override</option> (boolean)</term>
+                    <listitem><para>If this is true, clear cxxflags from previous build options before adding it from these options.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>ldflags</option> (string)</term>
-                    <listitem><para>This is set in the environment variable LDFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatinated with spaces inbetween.</para></listitem>
+                    <listitem><para>This is set in the environment variable LDFLAGS during the build. Multiple specifications of this (in e.g. per-arch area) are concatenated, separated by spaces.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>ldflags-override</option> (boolean)</term>
+                    <listitem><para>If this is true, clear ldflags from previous build options before adding it from these options.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>prefix</option> (string)</term>
@@ -229,16 +304,63 @@
                     applications and <filename>/usr</filename> for runtimes).</para></listitem>
                 </varlistentry>
                 <varlistentry>
+                    <term><option>libdir</option> (string)</term>
+                    <listitem><para>The build libdir for the modules (defaults to <filename>/app/lib</filename> for
+                    applications and <filename>/usr/lib</filename> for runtimes).</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>append-path</option> (string)</term>
+                    <listitem><para>This will get appended to PATH in the build environment (with an leading colon if
+                    needed).</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>prepend-path</option> (string)</term>
+                    <listitem><para>This will get prepended to PATH in the build environment (with an trailing colon if
+                    needed).</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>append-ld-library-path</option> (string)</term>
+                    <listitem><para>This will get appended to LD_LIBRARY_PATH in the build environment (with an leading colon if
+                    needed).</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>prepend-ld-library-path</option> (string)</term>
+                    <listitem><para>This will get prepended to LD_LIBRARY_PATH in the build environment (with an trailing colon if
+                    needed).</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>append-pkg-config-path</option> (string)</term>
+                    <listitem><para>This will get appended to PKG_CONFIG_PATH in the build environment (with an leading colon if
+                    needed).</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>prepend-pkg-config-path</option> (string)</term>
+                    <listitem><para>This will get prepended to PKG_CONFIG_PATH in the build environment (with an trailing colon if
+                    needed).</para></listitem>
+                </varlistentry>
+                <varlistentry>
                     <term><option>env</option> (object)</term>
-                    <listitem><para>This is a dictionary defining environment variables to be set during the build.</para></listitem>
+                    <listitem><para>This is a dictionary defining environment variables to be set during the build. Elements in this override the properties that set the environment, like cflags and ldflags.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>build-args</option> (array of strings)</term>
                     <listitem><para>This is an array containing extra options to pass to flatpak build.</para></listitem>
                 </varlistentry>
                 <varlistentry>
+                    <term><option>test-args</option> (array of strings)</term>
+                    <listitem><para>Similar to build-args but affects the tests, not the normal build.</para></listitem>
+                </varlistentry>
+                <varlistentry>
                     <term><option>config-opts</option> (array of strings)</term>
                     <listitem><para>This is an array containing extra options to pass to configure.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>make-args</option> (array of strings)</term>
+                    <listitem><para>An array of extra arguments that will be passed to make</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>make-install-args</option> (array of strings)</term>
+                    <listitem><para>An array of extra arguments that will be passed to make install</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>strip</option> (boolean)</term>
@@ -250,10 +372,56 @@
                     and puts this in an extension. If you want to disable this, set no-debuginfo to true.</para></listitem>
                 </varlistentry>
                 <varlistentry>
+                    <term><option>no-debuginfo-compression</option> (boolean)</term>
+                    <listitem><para>By default when extracting debuginfo we compress the debug sections. If you want to disable this, set no-debuginfo-compression to true.</para></listitem>
+                </varlistentry>
+                <varlistentry>
                     <term><option>arch</option> (object)</term>
                     <listitem><para>This is a dictionary defining for each arch a separate build options object that override the main one.</para></listitem>
                 </varlistentry>
             </variablelist>
+        </refsect2>
+        <refsect2>
+            <title>Extension</title>
+            <para>
+              Extension define extension points in the app/runtime that can be implemented by extensions, supplying extra files
+              which are available during runtime..
+            </para>
+            <para>
+                These are the properties that are accepted:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><option>directory</option> (string)</term>
+                    <listitem><para>
+                      The directory where the extension is mounted.
+                      If the extension point is for an application, this path is relative to /app,
+                      otherwise it is relative to /usr.
+                    </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>bundle</option> (boolean)</term>
+                    <listitem><para>If this is true, then the data
+                    created in the extension directory is omitted from
+                    the result, and instead packaged in a separate
+                    extension.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>remove-after-build</option> (boolean)</term>
+                    <listitem><para>If this is true, the extension is
+                    removed during when finishing. This is only
+                    interesting for extensions in the
+                    add-build-extensions property.</para></listitem>
+                </varlistentry>
+            </variablelist>
+            <para>
+              Additionally the standard flatpak extension properies
+              are supported, and put directly into the metadata file:
+              autodelete, no-autodownload, subdirectories,
+              add-ld-path, download-if, enable-if, merge-dirs,
+              subdirectory-suffix, locale-subset, version, versions.
+              See the flatpak metadata documentation for more information on these.
+            </para>
         </refsect2>
         <refsect2>
             <title>Module</title>
@@ -277,8 +445,12 @@
                     <listitem><para>If true, skip this module</para></listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term><option>sources</option> (array of objects)</term>
-                    <listitem><para>An array of objects defining sources that will be downloaded and extracted in order</para></listitem>
+                    <term><option>sources</option> (array of objects or strings)</term>
+                    <listitem><para>An array of objects defining
+                    sources that will be downloaded and extracted in
+                    order. String members in the array are interpreted
+                    as the name of a separate json or yaml file that contains
+                    sources.  See below for details.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>config-opts</option> (array of strings)</term>
@@ -305,6 +477,10 @@
                     <listitem><para>Don't call make with arguments to build in parallel</para></listitem>
                 </varlistentry>
                 <varlistentry>
+                    <term><option>install-rule</option> (string)</term>
+                    <listitem><para>Name of the rule passed to make for the install phase, default is install</para></listitem>
+                </varlistentry>
+                <varlistentry>
                     <term><option>no-make-install</option> (boolean)</term>
                     <listitem><para>Don't run the make install (or equivalent) stage</para></listitem>
                 </varlistentry>
@@ -318,7 +494,7 @@
                 </varlistentry>
                 <varlistentry>
                     <term><option>buildsystem</option> (string)</term>
-                    <listitem><para>Build system to use: autotools, cmake, cmake-ninja, meson, simple</para></listitem>
+                    <listitem><para>Build system to use: autotools, cmake, cmake-ninja, meson, simple, qmake</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>builddir</option> (boolean)</term>
@@ -336,6 +512,7 @@
                     <term><option>build-commands</option> (array of strings)</term>
                     <listitem><para>An array of commands to run during build (between make and make install if those are used).
                     This is primarily useful when using the "simple" buildsystem.
+                    Each command is run in <literal>/bin/sh -c</literal>, so it can use standard POSIX shell syntax such as piping output.
                     </para></listitem>
                 </varlistentry>
                 <varlistentry>
@@ -372,9 +549,21 @@
                     <listitem><para>Extra files to clean up in the platform.</para></listitem>
                 </varlistentry>
                 <varlistentry>
+                    <term><option>run-tests</option> (boolean)</term>
+                    <listitem><para>If true this will run the tests after installing.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>test-rule</option> (string)</term>
+                    <listitem><para>The target to build when running the tests. Defaults to "check" for make and "test" for ninja. Set to empty to disable.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>test-commands</option> (array of strings)</term>
+                    <listitem><para>Array of commands to run during the tests.</para></listitem>
+                </varlistentry>
+                <varlistentry>
                     <term><option>modules</option> (array of objects or strings)</term>
                     <listitem><para>An array of objects specifying nested modules to be built before this one.
-                    String members in the array are interpreted as names of a separate json file that contains a module.</para></listitem>
+                    String members in the array are interpreted as names of a separate json or yaml file that contains a module.</para></listitem>
                 </varlistentry>
             </variablelist>
         </refsect2>
@@ -383,6 +572,11 @@
             <para>
                 These contain a pointer to the source that will be extracted into the source directory before
                 the build starts. They can be of several types, distinguished by the type property.
+            </para>
+            <para>
+                Additionally, the sources list can contain a plain string, which is interpreted as the name
+                of a separate json or yaml file that is read and inserted at this point. The file can contain
+                a single source, or an array of sources.
             </para>
             <refsect3>
                 <title>All sources</title>
@@ -417,12 +611,40 @@
                         <listitem><para>The URL of a remote archive that will be downloaded. This overrides path if both are specified.</para></listitem>
                     </varlistentry>
                     <varlistentry>
+                        <term><option>mirror-urls</option> (array of strings)</term>
+                        <listitem><para>A list of alternative urls that are used if the main url fails.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>git-init</option> (boolean)</term>
+                        <listitem><para>Whether to initialise the repository as a git repository.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>md5</option> (string)</term>
+                        <listitem><para>The md5 checksum of the file, verified after download</para>
+                        <para>Note that md5 is no longer considered a safe checksum, we recommend you use at least sha256.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>sha1</option> (string)</term>
+                        <listitem><para>The sha1 checksum of the file, verified after download</para>
+                        <para>Note that sha1 is no longer considered a safe checksum, we recommend you use at least sha256.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
                         <term><option>sha256</option> (string)</term>
                         <listitem><para>The sha256 checksum of the file, verified after download</para></listitem>
                     </varlistentry>
                     <varlistentry>
+                        <term><option>sha512</option> (string)</term>
+                        <listitem><para>The sha512 checksum of the file, verified after download</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
                         <term><option>strip-components</option> (integer)</term>
                         <listitem><para>The number of initial pathname components to strip during extraction. Defaults to 1.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>dest-filename</option> (string)</term>
+                        <listitem><para>Filename to for the downloaded file, defaults to the basename of url.</para></listitem>
                     </varlistentry>
                 </variablelist>
             </refsect3>
@@ -443,7 +665,11 @@
                     </varlistentry>
                     <varlistentry>
                         <term><option>branch</option> (string)</term>
-                        <listitem><para>The branch/tag to use from the git repository</para></listitem>
+                        <listitem><para>The branch to use from the git repository</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>tag</option> (string)</term>
+                        <listitem><para>The tag to use from the git repository</para></listitem>
                     </varlistentry>
                     <varlistentry>
                         <term><option>commit</option> (string)</term>
@@ -453,6 +679,10 @@
                     <varlistentry>
                         <term><option>disable-fsckobjects</option> (boolean)</term>
                         <listitem><para>Don't use transfer.fsckObjects=1 to mirror git repository. This may be needed for some (broken) repositories.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>disable-shallow-clone</option> (boolean)</term>
+                        <listitem><para>Don't optimize by making a shallow clone when downloading the git repo.</para></listitem>
                     </varlistentry>
                 </variablelist>
             </refsect3>
@@ -474,6 +704,40 @@
                 </variablelist>
             </refsect3>
             <refsect3>
+                <title>Svn sources</title>
+                <variablelist>
+                    <varlistentry>
+                        <term><option>type</option></term>
+                        <listitem><para>"svn"</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>url</option> (string)</term>
+                        <listitem><para>URL of the svn repository, including branch/tag part</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>revision</option> (string)</term>
+                        <listitem><para>A specific revision number to use</para></listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+            <refsect3>
+                <title>Directory sources</title>
+                <variablelist>
+                    <varlistentry>
+                        <term><option>type</option></term>
+                        <listitem><para>"dir"</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>path</option> (string)</term>
+                        <listitem><para>The path of a local directory whose content will be copied into the source dir. Note that directory sources don't currently support caching, so they will be rebuilt each time.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>skip</option> (array of strings)</term>
+                        <listitem><para>Source files to ignore in the directory.</para></listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+            <refsect3>
                 <title>File sources</title>
                 <variablelist>
                     <varlistentry>
@@ -489,8 +753,28 @@
                         <listitem><para>The URL of a remote file that will be downloaded and copied into the source dir. This overrides path if both are specified.</para></listitem>
                     </varlistentry>
                     <varlistentry>
+                        <term><option>mirror-urls</option> (array of strings)</term>
+                        <listitem><para>A list of alternative urls that are used if the main url fails.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>md5</option> (string)</term>
+                        <listitem><para>The md5 checksum of the file, verified after download. This is optional for local files.</para>
+                        <para>Note that md5 is no longer considered a safe checksum, we recommend you use at least sha256.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>sha1</option> (string)</term>
+                        <listitem><para>The sha1 checksum of the file, verified after download. This is optional for local files.</para>
+                        <para>Note that sha1 is no longer considered a safe checksum, we recommend you use at least sha256.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
                         <term><option>sha256</option> (string)</term>
                         <listitem><para>The sha256 checksum of the file, verified after download. This is optional for local files.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>sha512</option> (string)</term>
+                        <listitem><para>The sha512 checksum of the file, verified after download. This is optional for local files.</para></listitem>
                     </varlistentry>
                     <varlistentry>
                         <term><option>dest-filename</option> (string)</term>
@@ -554,12 +838,148 @@
                         <listitem><para>Whether to use "git apply" rather than "patch" to apply the patch, required when the patch file contains binary diffs.</para></listitem>
                     </varlistentry>
                     <varlistentry>
+                        <term><option>use-git-am</option> (boolean)</term>
+                        <listitem><para>Whether to use "git am" rather than "patch" to apply the patch, required when the patch file contains binary diffs. You cannot use this at the same time as <option>use-git</option>.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
                         <term><option>options</option> (array of strings)</term>
                         <listitem><para>Extra options to pass to the patch command.</para></listitem>
                     </varlistentry>
                 </variablelist>
             </refsect3>
+            <refsect3>
+                <title>Extra data sources</title>
+                <variablelist>
+                    <varlistentry>
+                        <term><option>type</option></term>
+                        <listitem><para>"extra-data"</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>filename</option> (string)</term>
+                        <listitem><para>The name to use for the downloaded extra data</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>url</option> (string)</term>
+                        <listitem><para>The url to the extra data.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>sha256</option> (string)</term>
+                        <listitem><para>The sha256 of the extra data.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>size</option> (number)</term>
+                        <listitem><para>The size of the extra data.</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>installed-size</option> (string)</term>
+                        <listitem><para>The extra installed size this adds to the app (optional).</para></listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
         </refsect2>
+    </refsect1>
+
+    <refsect1>
+      <title>Build environment</title>
+
+      <para>
+        When building the application each command is run in a separate sandbox with access
+        to only the things required for it. This section describes the details of the sandbox.
+        Any options here can be overridden globally or per-module with the <option>build-args</option>
+        option (although such manifest will not work if you start flatpak-builder with <option>--sandbox</option>).
+      </para>
+
+      <refsect2>
+        <title>Filesystem</title>
+        <para>
+          Each module is built in its own build directory, stored in a sub directory called
+          <filename>build/$modulename-$count</filename> in the state dir (which is typically <filename>.flatpak-builder/</filename>).
+          Additionally there is a symlink <filename>build/$modulename</filename> to the latest version.
+          In order to generate reproducible builds this directory is also mounted as <filename>/run/build/$modulename</filename>
+          in the sandbox (or <filename>/run/build-runtime/$modulename</filename> when building runtimes).
+          This is used as current working directory for all build ops.
+        </para>
+        <para>
+          The destination directory for installation is accessible for writing at the place it will seen at runtime.
+          In the case of a regular application this will be /app. If building a runtime it will instead be /usr, and
+          when building an extension it will be at the extensionpoint directory somewhere below /app (for app extension)
+          or /usr (for runtime extensions).
+        </para>
+        <para>
+          Additionally the there will be (as needed, depending on what is building) read-only mounts of the sdk at /usr,
+          sdk extensions below that, and the application at /app. No other filesystem access is available.
+        </para>
+      </refsect2>
+
+      <refsect2>
+        <title>Environment</title>
+        <para>
+          The environment can be modified in several ways in the manifest, but the default values are:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term>FLATPAK_ID</term>
+            <listitem><para>The id of the application currently building.</para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>FLATPAK_ARCH</term>
+            <listitem><para>The architecture currently building.</para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>FLATPAK_DEST</term>
+            <listitem><para>The path to where the current build should install into. This is <filename>/app</filename> for application builds.</para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>FLATPAK_BUILDER_N_JOBS</term>
+            <listitem><para>The number of jobs that flatpak-builder would normally use for make -j. Defaults to ncpus unless the module disabled parallel make.</para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>FLATPAK_BUILDER_BUILDDIR</term>
+            <listitem><para>The path to the build directory of the module currently building. This is normally <filename>/run/build/$MODULE</filename>.</para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>PATH</term>
+            <listitem><para><filename>/app/bin:/usr/bin</filename></para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>LD_LIBRARY_PATH</term>
+            <listitem><para><filename>/app/lib</filename></para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>PKG_CONFIG_PATH</term>
+            <listitem><para><filename>/app/lib/pkgconfig:/app/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig</filename></para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>ACLOCAL_PATH</term>
+            <listitem><para><filename>/app/share/aclocal</filename></para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>C_INCLUDE_PATH</term>
+            <listitem><para><filename>/app/include</filename></para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>CPLUS_INCLUDE_PATH</term>
+            <listitem><para><filename>/app/include</filename></para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>LDFLAGS</term>
+            <listitem><para>-L/app/lib </para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>LC_ALL</term>
+            <listitem><para>en_US.utf8</para></listitem>
+          </varlistentry>
+        </variablelist>
+      </refsect2>
+
+      <refsect2>
+        <title>Permissions</title>
+        <para>
+          Builds have the --allow=devel and --allow=multiarch permissions that regular flatpak runs don't have by default. This allows
+          limits the syscall filtering that is normally done so development tools like debuggers work. Otherwise the build sandbox
+          is very limited, for example there is no network access.
+        </para>
+      </refsect2>
     </refsect1>
 
     <refsect1>
@@ -620,7 +1040,7 @@
             "sources": [
                 {
                     "type": "git",
-                    "url": "git://git.gnome.org/babl"
+                    "url": "https://gitlab.gnome.org/GNOME/babl.git"
                 }
             ]
         },

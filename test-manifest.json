@@ -1,4 +1,5 @@
 {
+  "$schema": "./flatpak-manifest.schema",
   "app-id": "com.vinszent.GnomeTwitch",
   "runtime": "org.gnome.Platform",
   "runtime-version": "3.24",
@@ -35,7 +36,6 @@
     {
       "name": "gnome-twitch",
       "buildsystem": "meson",
-      "config-opts": [ "--buildtype=release" ],
       "builddir": true,
       "config-opts": [
         "-Dbuild-player-backends=gstreamer-cairo,gstreamer-opengl",
