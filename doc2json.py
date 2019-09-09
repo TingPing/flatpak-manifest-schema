@@ -25,7 +25,17 @@ schema = {
 
 def entry_to_desc(entry) -> str:
     if not isinstance(entry, str):
-        entry = ' '.join(entry)
+        entry_str = ''
+        for item in entry:
+            if isinstance(item, str):
+                entry_str += item + ' '
+            elif isinstance(item, dict):
+                # FIXME: <command>foo</command> is stripped from the text
+                #        and its not clear how to recombine them.
+                entry_str += item['#text'] + ' '
+            else:
+                assert(False)
+        entry = entry_str.rstrip()
     return re.sub(r'\s(\s+)', r' ', entry).replace(' #text', '')
 
 

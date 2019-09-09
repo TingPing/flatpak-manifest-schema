@@ -58,7 +58,24 @@
                 </varlistentry>
                 <varlistentry>
                     <term><option>branch</option> (string)</term>
-                    <listitem><para>The branch of the application, defaults to master.</para></listitem>
+                    <listitem><para>The branch to use when exporting
+                    the application. If this is unset the defaults
+                    come from the default-branch option.</para>
+                    <para>This key overrides both the default-branch
+                    key, and the --default-branch commandline
+                    option. Unless you need a very specific branchname
+                    (like for a runtime or an extension) it is
+                    recommended to use the default-branch key instead, because
+                    you can then override the default using --default-branch when
+                    building for instance a test build.</para></listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>default-branch</option> (string)</term>
+                    <listitem><para>The default branch to use when
+                    exporting the application. Defaults to master. </para>
+                    <para>This key can be overriden by the
+                    --default-branch commandline
+                    option.</para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>collection-id</option> (string)</term>
@@ -106,7 +123,16 @@
                 </varlistentry>
                 <varlistentry>
                     <term><option>command</option> (string)</term>
-                    <listitem><para>The filename or path to the main binary of the application. Note that this is really just a single file, not a commandline. If you want to pass arguments, install a shell script wrapper and use that as the command.</para></listitem>
+                    <listitem><para>
+                        The filename or path to the main binary of the application. Note that this
+                        is really just a single file, not a commandline. If you want to pass arguments,
+                        install a shell script wrapper and use that as the command.
+                    </para><para>
+                        Also note that the command is used when the application is run via
+                        <command>flatpak run</command>, and does not affect what gets executed when
+                        the application is run in other ways, e.g. via the desktop file or D-Bus
+                        activation.
+                    </para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>build-runtime</option> (boolean)</term>
@@ -340,7 +366,7 @@
                 </varlistentry>
                 <varlistentry>
                     <term><option>env</option> (object)</term>
-                    <listitem><para>This is a dictionary defining environment variables to be set during the build. Elements in this override the properties that set the environment, like cflags and ldflags.</para></listitem>
+                    <listitem><para>This is a dictionary defining environment variables to be set during the build. Elements in this override the properties that set the environment, like cflags and ldflags. Keys with a null value unset the corresponding variable. </para></listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><option>build-args</option> (array of strings)</term>
@@ -661,7 +687,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term><option>url</option> (string)</term>
-                        <listitem><para>URL of the git repository. This overrides path if both are specified.</para></listitem>
+                        <listitem><para>URL of the git repository. This overrides path if both are specified. When using git via SSH, the correct syntax is ssh://user@domain/path/to/repo.git.</para></listitem>
                     </varlistentry>
                     <varlistentry>
                         <term><option>branch</option> (string)</term>
@@ -798,7 +824,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term><option>dest-filename</option> (string)</term>
-                        <listitem><para>Filename to use inside the source dir, default to the basename of path.</para></listitem>
+                        <listitem><para>Filename to use inside the source dir, default to autogen.sh.</para></listitem>
                     </varlistentry>
                 </variablelist>
             </refsect3>
@@ -828,6 +854,10 @@
                     <varlistentry>
                         <term><option>path</option> (string)</term>
                         <listitem><para>The path of a patch file that will be applied in the source dir</para></listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><option>paths</option> (array of strings)</term>
+                        <listitem><para>An list of paths to a patch files that will be applied in the source dir, in order</para></listitem>
                     </varlistentry>
                     <varlistentry>
                         <term><option>strip-components</option> (integer)</term>

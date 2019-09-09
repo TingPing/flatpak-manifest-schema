@@ -70,7 +70,7 @@
         },
         "env": {
           "type": "object",
-          "description": "This is a dictionary defining environment variables to be set during the build. Elements in this override the properties that set the environment, like cflags and ldflags."
+          "description": "This is a dictionary defining environment variables to be set during the build. Elements in this override the properties that set the environment, like cflags and ldflags. Keys with a null value unset the corresponding variable."
         },
         "build-args": {
           "type": "array",
@@ -426,7 +426,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -465,6 +465,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -576,7 +583,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -615,6 +622,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -726,7 +740,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -765,6 +779,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -876,7 +897,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -915,6 +936,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1026,7 +1054,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -1065,6 +1093,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1176,7 +1211,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -1215,6 +1250,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1326,7 +1368,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -1365,6 +1407,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1476,7 +1525,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -1515,6 +1564,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1626,7 +1682,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -1665,6 +1721,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1776,7 +1839,7 @@
         },
         "dest-filename": {
           "type": "string",
-          "description": "Filename to use inside the source dir, default to the basename of path."
+          "description": "Filename to use inside the source dir, default to autogen.sh."
         },
         "branch": {
           "type": "string",
@@ -1815,6 +1878,13 @@
             "type": "string"
           },
           "description": "An array of shell commands that will be run during source extraction"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An list of paths to a patch files that will be applied in the source dir, in order"
         },
         "use-git": {
           "type": "boolean",
@@ -1870,7 +1940,11 @@
     },
     "branch": {
       "type": "string",
-      "description": "The branch of the application, defaults to master."
+      "description": "The branch to use when exporting the application. If this is unset the defaults come from the default-branch option. This key overrides both the default-branch key, and the --default-branch commandline option. Unless you need a very specific branchname (like for a runtime or an extension) it is recommended to use the default-branch key instead, because you can then override the default using --default-branch when building for instance a test build."
+    },
+    "default-branch": {
+      "type": "string",
+      "description": "The default branch to use when exporting the application. Defaults to master. This key can be overriden by the --default-branch commandline option."
     },
     "collection-id": {
       "type": "string",
@@ -1902,7 +1976,7 @@
     },
     "command": {
       "type": "string",
-      "description": "The filename or path to the main binary of the application. Note that this is really just a single file, not a commandline. If you want to pass arguments, install a shell script wrapper and use that as the command."
+      "description": "The filename or path to the main binary of the application. Note that this is really just a single file, not a commandline. If you want to pass arguments, install a shell script wrapper and use that as the command. Also note that the command is used when the application is run via , and does not affect what gets executed when the application is run in other ways, e.g. via the desktop file or D-Bus activation."
     },
     "build-runtime": {
       "type": "boolean",
