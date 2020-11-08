@@ -57,6 +57,7 @@ def handle_property(name: str, variable_info: dict, entry_dict: dict):
         variable_info['type'] = 'array'
         variable_info['items'] = {
             'anyOf': [
+                {'type': 'string'},
                 {'$ref': '#/definitions/archive-source'},
                 {'$ref': '#/definitions/git-source'},
                 {'$ref': '#/definitions/bzr-source'},
