@@ -1,3 +1,5 @@
+This project is no longer maintained. For a schema and contributions see https://github.com/flatpak/flatpak-builder/blob/master/data/flatpak-manifest.schema.json
+
 # TODO:
 
 - [x] Define sources
