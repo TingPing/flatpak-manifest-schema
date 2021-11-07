@@ -132,6 +132,62 @@
           "type": "string",
           "description": "The directory where the extension is mounted. If the extension point is for an application, this path is relative to /app, otherwise it is relative to /usr."
         },
+        "autodelete": {
+          "type": "boolean",
+          "description": "Whether to automatically delete extensions matching this extension point when deleting a 'related' application or runtime."
+        },
+        "no-autodownload": {
+          "type": "boolean",
+          "description": "Whether to automatically download extensions matching this extension point when updating or installing a 'related' application or runtime."
+        },
+        "subdirectories": {
+          "type": "boolean",
+          "description": "If this key is set to true, then flatpak will look for extensions whose name is a prefix of the extension point name, and mount them at the corresponding name below the subdirectory."
+        },
+        "add-ld-path": {
+          "type": "string",
+          "description": "A path relative to the extension point directory that will be appended to LD_LIBRARY_PATH."
+        },
+        "download-if": {
+          "type": "string",
+          "anyOf": [
+            {
+              "enum": [
+                "active-gl-driver",
+                "active-gtk-theme",
+                "have-intel-gpu"
+              ]
+            },
+            {
+              "pattern": "on-xdg-desktop-.+"
+            }
+          ],
+          "description": "A condition that must be true for the extension to be auto-downloaded."
+        },
+        "enable-if": {
+          "$ref": "#/definitions/extension/properties/download-if",
+          "description": "A condition that must be true for the extension to be enabled."
+        },
+        "merge-dirs": {
+          "type": "string",
+          "description": "A list of relative paths of directories below the extension point directory that will be merged."
+        },
+        "subdirectory-suffix": {
+          "type": "string",
+          "description": "A suffix that gets appended to the directory name. This is very useful when the extension point naming scheme is \"reversed\". For example, an extension point for GTK+ themes would be /usr/share/themes/$NAME/gtk-3.0, which could be achieved using subdirectory-suffix=gtk-3.0."
+        },
+        "locale-subset": {
+          "type": "boolean",
+          "description": "If set, then the extensions are partially downloaded by default, based on the currently configured locales. This means that the extension contents should be a set of directories with the language code as name."
+        },
+        "version": {
+          "type": "string",
+          "description": "The branch to use when looking for the extension. If this is not specified, it defaults to the branch of the application or runtime that the extension point is for."
+        },
+        "versions": {
+          "type": "string",
+          "description": "The branches to use when looking for the extension. If this is not specified, it defaults to the branch of the application or runtime that the extension point is for."
+        },
         "bundle": {
           "type": "boolean",
           "description": "If this is true, then the data created in the extension directory is omitted from the result, and instead packaged in a separate extension."
