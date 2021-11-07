@@ -2078,11 +2078,17 @@
       "description": "An array of objects specifying the modules to be built in order. String members in the array are interpreted as the name of a separate json or yaml file that contains a module. See below for details."
     },
     "add-extensions": {
-      "type": "objects",
+      "type": "object",
+      "patternProperties": {
+        ".+": {
+          "$ref": "#/definitions/extension"
+        }
+      },
+      "additionalProperties": false,
       "description": "This is a dictionary of extension objects. The key is the name of the extension. See below for details."
     },
     "add-build-extensions": {
-      "type": "objects",
+      "$ref": "#/properties/add-extensions",
       "description": "This is a dictionary of extension objects similar to add-extensions. The main difference is that the extensions are added early and are available for use during the build."
     },
     "cleanup": {
