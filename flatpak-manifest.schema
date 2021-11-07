@@ -70,6 +70,12 @@
         },
         "env": {
           "type": "object",
+          "patternProperties": {
+            ".+": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
           "description": "This is a dictionary defining environment variables to be set during the build. Elements in this override the properties that set the environment, like cflags and ldflags. Keys with a null value unset the corresponding variable."
         },
         "build-args": {
