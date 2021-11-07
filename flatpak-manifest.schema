@@ -127,6 +127,12 @@
         },
         "arch": {
           "type": "object",
+          "patternProperties": {
+            "^(x86_64|i386|arm|aarch64)$": {
+              "$ref": "#/definitions/build-options"
+            }
+          },
+          "additionalProperties": false,
           "description": "This is a dictionary defining for each arch a separate build options object that override the main one."
         }
       }
